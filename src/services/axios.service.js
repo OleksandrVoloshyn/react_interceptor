@@ -10,7 +10,7 @@ let isRefreshing = false
 
 axiosService.interceptors.request.use((config) => {
     const access = localStorage.getItem('access');
-    if(access){
+    if (access) {
         config.headers.Authorization = `Bearer ${access}`
     }
     return config
@@ -21,20 +21,23 @@ axiosService.interceptors.response.use(
         return config
     },
     async (error) => {
-        if (error.response?.status === 401 && error.config && !isRefreshing) {
+        const refreshToken = localStorage.getItem('refresh');
+        if (error.response?.status === 401 && error.config && !isRefreshing && refreshToken) {
             isRefreshing = true
-            const refreshToken = localStorage.getItem('refresh');
             try {
                 const {data} = await authService.refresh(refreshToken);
-                const {access,refresh} = data;
+                const {access, refresh} = data;
                 localStorage.setItem('access', access)
                 localStorage.setItem('refresh', refresh)
             } catch (e) {
                 localStorage.clear()
                 history.replace('/login?expSession=true')
             }
+            isRefreshing = false
             return axiosService.request(error.config)
         }
-    })
+        return Promise.reject(error)
+    }
+)
 
-export {axiosService}
+export {axiosService, history}

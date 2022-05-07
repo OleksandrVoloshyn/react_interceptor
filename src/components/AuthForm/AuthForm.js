@@ -26,7 +26,7 @@ const AuthForm = () => {
                 navigate('/login')
             } else {
                 await dispatch(authActions.login({user}))
-                navigate(state.pathname, {replace: true})
+                navigate(state?.pathname || '/', {replace: true})
             }
         } catch (e) {
             setErrors(e.response.data)
